@@ -1,0 +1,4 @@
+author: "TheCarnalest"
+delete-after: True
+changes:
+  - rscadd: "test"
