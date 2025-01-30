@@ -7,7 +7,7 @@
 	var/cacherealtime = 0
 
 /datum/ipintel/New()
-	cachedate = SQLtime()
+	cachedate = ISOtime()
 	cacherealtime = world.realtime
 
 /datum/ipintel/proc/is_valid()

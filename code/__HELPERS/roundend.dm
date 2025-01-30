@@ -214,7 +214,7 @@
 	LAZYCLEARLIST(round_end_events)
 
 	var/speed_round = FALSE
-	if(world.time - SSticker.round_start_time <= 300 SECONDS)
+	if(STATION_TIME_PASSED() <= 5 MINUTES)
 		speed_round = TRUE
 
 	for(var/client/C in GLOB.clients)

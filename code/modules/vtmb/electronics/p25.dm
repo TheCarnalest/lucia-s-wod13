@@ -35,7 +35,7 @@ GLOBAL_LIST_EMPTY(p25_radios)
 	var/list/sorted_callsigns = list()
 	for(var/callsign in registered_callsigns)
 		sorted_callsigns += callsign
-	sortTim(sorted_callsigns, /proc/cmp_numeric_asc)
+	sortTim(sorted_callsigns, GLOBAL_PROC_REF(cmp_numeric_asc))
 
 	for(var/callsign in sorted_callsigns)
 		data["registered_callsigns"] += list(list(
@@ -79,7 +79,7 @@ GLOBAL_LIST_EMPTY(p25_radios)
 				var/num = text2num(callsign)
 				if(num)
 					sorted_callsigns += num
-			sortTim(sorted_callsigns, /proc/cmp_numeric_asc)
+			sortTim(sorted_callsigns, GLOBAL_PROC_REF(cmp_numeric_asc))
 			for(var/num in sorted_callsigns)
 				dat += "[num] - [registered_callsigns["[num]"]]<BR>"
 		else
@@ -259,42 +259,42 @@ GLOBAL_LIST_EMPTY(p25_radios)
 
 		if(length(command_signs))
 			dat += "<B>Command (1-9):</B><BR>"
-			sortTim(command_signs, /proc/cmp_numeric_asc)
+			sortTim(command_signs, GLOBAL_PROC_REF(cmp_numeric_asc))
 			for(var/num in command_signs)
 				dat += "[num] - [registered_callsigns["[num]"]]<BR>"
 			dat += "<BR>"
 
 		if(length(supervisor_signs))
 			dat += "<B>Supervisors (10-99):</B><BR>"
-			sortTim(supervisor_signs, /proc/cmp_numeric_asc)
+			sortTim(supervisor_signs, GLOBAL_PROC_REF(cmp_numeric_asc))
 			for(var/num in supervisor_signs)
 				dat += "[num] - [registered_callsigns["[num]"]]<BR>"
 			dat += "<BR>"
 
 		if(length(patrol_signs))
 			dat += "<B>Patrol (100-499):</B><BR>"
-			sortTim(patrol_signs, /proc/cmp_numeric_asc)
+			sortTim(patrol_signs, GLOBAL_PROC_REF(cmp_numeric_asc))
 			for(var/num in patrol_signs)
 				dat += "[num] - [registered_callsigns["[num]"]]<BR>"
 			dat += "<BR>"
 
 		if(length(dispatch_signs))
 			dat += "<B>Dispatch (500-599):</B><BR>"
-			sortTim(dispatch_signs, /proc/cmp_numeric_asc)
+			sortTim(dispatch_signs, GLOBAL_PROC_REF(cmp_numeric_asc))
 			for(var/num in dispatch_signs)
 				dat += "[num] - [registered_callsigns["[num]"]]<BR>"
 			dat += "<BR>"
 
 		if(length(tactical_signs))
 			dat += "<B>Tactical (600-699):</B><BR>"
-			sortTim(tactical_signs, /proc/cmp_numeric_asc)
+			sortTim(tactical_signs, GLOBAL_PROC_REF(cmp_numeric_asc))
 			for(var/num in tactical_signs)
 				dat += "[num] - [registered_callsigns["[num]"]]<BR>"
 			dat += "<BR>"
 
 		if(length(government_signs))
 			dat += "<B>Government (700-799):</B><BR>"
-			sortTim(government_signs, /proc/cmp_numeric_asc)
+			sortTim(government_signs, GLOBAL_PROC_REF(cmp_numeric_asc))
 			for(var/num in government_signs)
 				dat += "[num] - [registered_callsigns["[num]"]]<BR>"
 			dat += "<BR>"

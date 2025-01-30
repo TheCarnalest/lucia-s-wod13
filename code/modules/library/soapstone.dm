@@ -223,7 +223,7 @@ but only permanently removed with the curator's soapstone.
 	var/list/data = list()
 
 	data["hidden_message"] = hidden_message
-	data["realdate"] = SQLtime(realdate)
+	data["realdate"] = ISOtime(realdate)
 	data["num_likes"] = like_keys.len
 	data["num_dislikes"] = dislike_keys.len
 	data["is_creator"] = user.ckey == creator_key
