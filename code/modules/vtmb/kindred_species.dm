@@ -214,7 +214,7 @@
 			for(var/i in host.knowscontacts)
 				dat += "-[i] contact<BR>"
 			dat += "</p>"
-		host << browse(HTML_SKELETON(dat), "window=vampire;size=400x450;border=1;can_resize=1;can_minimize=0")
+		host << browse(dat, "window=vampire;size=400x450;border=1;can_resize=1;can_minimize=0")
 		onclose(host, "vampire", src)
 
 /datum/species/kindred/on_species_gain(mob/living/carbon/human/C)

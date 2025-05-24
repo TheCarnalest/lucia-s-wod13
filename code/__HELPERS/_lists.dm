@@ -23,8 +23,6 @@
 #define SANITIZE_LIST(L) ( islist(L) ? L : list() )
 #define reverseList(L) reverseRange(L.Copy())
 #define LAZYADDASSOC(L, K, V) if(!L) { L = list(); } L[K] += list(V);
-///This is used to add onto lazy assoc list when the value you're adding is a /list/. This one has extra safety over lazyaddassoc because the value could be null (and thus cant be used to += objects)
-#define LAZYADDASSOCLIST(L, K, V) if(!L) { L = list(); } L[K] += list(V);
 #define LAZYREMOVEASSOC(L, K, V) if(L) { if(L[K]) { L[K] -= V; if(!length(L[K])) L -= K; } if(!length(L)) L = null; }
 #define LAZYACCESSASSOC(L, I, K) L ? L[I] ? L[I][K] ? L[I][K] : null : null : null
 
@@ -558,3 +556,48 @@
 			return FALSE
 
 	return TRUE
+
+/proc/move_element(list/inserted_list, from_index, to_index)
+	if(from_index == to_index || from_index + 1 == to_index) //no need to move
+		return
+	if(from_index > to_index)
+		++from_index //since a null will be inserted before from_index, the index needs to be nudged right by one
+
+	inserted_list.Insert(to_index, null)
+	inserted_list.Swap(from_index, to_index)
+	inserted_list.Cut(from_index, from_index + 1)
+
+/proc/move_range(list/inserted_list, from_index, to_index, len = 1)
+	var/distance = abs(to_index - from_index)
+	if(len >= distance) //there are more elements to be moved than the distance to be moved. Therefore the same result can be achieved (with fewer operations) by moving elements between where we are and where we are going. The result being, our range we are moving is shifted left or right by dist elements
+		if(from_index <= to_index)
+			return //no need to move
+		from_index += len //we want to shift left instead of right
+
+		for(var/i in 1 to distance)
+			inserted_list.Insert(from_index, null)
+			inserted_list.Swap(from_index, to_index)
+			inserted_list.Cut(to_index, to_index + 1)
+	else
+		if(from_index > to_index)
+			from_index += len
+
+		for(var/i in 1 to len)
+			inserted_list.Insert(to_index, null)
+			inserted_list.Swap(from_index, to_index)
+			inserted_list.Cut(from_index, from_index + 1)
+
+/proc/reverse_range(list/inserted_list, start = 1, end = 0)
+	if(inserted_list.len)
+		start = start % inserted_list.len
+		end = end % (inserted_list.len + 1)
+		if(start <= 0)
+			start += inserted_list.len
+		if(end <= 0)
+			end += inserted_list.len + 1
+
+		--end
+		while(start < end)
+			inserted_list.Swap(start++, end--)
+
+	return inserted_list

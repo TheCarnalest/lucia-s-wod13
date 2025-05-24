@@ -4,13 +4,11 @@
  * @license MIT
  */
 
+import axios from 'axios';
 import { exec } from 'child_process';
+import { createLogger } from 'common/logging.js';
 import { promisify } from 'util';
 
-import { createLogger } from './logging.js';
-import { require } from './require.js';
-
-const axios = require('axios');
 const logger = createLogger('dreamseeker');
 
 const instanceByPid = new Map();
@@ -25,7 +23,6 @@ export class DreamSeeker {
   }
 
   topic(params = {}) {
-    // prettier-ignore
     const query = Object.keys(params)
       .map(key => encodeURIComponent(key)
         + '=' + encodeURIComponent(params[key]))
@@ -38,7 +35,7 @@ export class DreamSeeker {
  * @param {number[]} pids
  * @returns {DreamSeeker[]}
  */
-DreamSeeker.getInstancesByPids = async (pids) => {
+DreamSeeker.getInstancesByPids = async pids => {
   if (process.platform !== 'win32') {
     return [];
   }
@@ -48,13 +45,14 @@ DreamSeeker.getInstancesByPids = async (pids) => {
     const instance = instanceByPid.get(pid);
     if (instance) {
       instances.push(instance);
-    } else {
+    }
+    else {
       pidsToResolve.push(pid);
     }
   }
   if (pidsToResolve.length > 0) {
     try {
-      const command = 'netstat -ano | findstr TCP | findstr 0.0.0.0:0';
+      const command = 'netstat -ano | findstr LISTENING';
       const { stdout } = await promisify(exec)(command, {
         // Max buffer of 1MB (default is 200KB)
         maxBuffer: 1024 * 1024,
@@ -84,10 +82,12 @@ DreamSeeker.getInstancesByPids = async (pids) => {
         instances.push(instance);
         instanceByPid.set(pid, instance);
       }
-    } catch (err) {
+    }
+    catch (err) {
       if (err.code === 'ERR_CHILD_PROCESS_STDIO_MAXBUFFER') {
         logger.error(err.message, err.code);
-      } else {
+      }
+      else {
         logger.error(err);
       }
       return [];
@@ -96,4 +96,4 @@ DreamSeeker.getInstancesByPids = async (pids) => {
   return instances;
 };
 
-const plural = (word, n) => (n !== 1 ? word + 's' : word);
+const plural = (word, n) => n !== 1 ? word + 's' : word;
