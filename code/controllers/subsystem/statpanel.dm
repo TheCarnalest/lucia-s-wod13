@@ -1,6 +1,6 @@
 SUBSYSTEM_DEF(statpanels)
 	name = "Stat Panels"
-	wait = 10
+	wait = 4
 	init_order = INIT_ORDER_STATPANELS
 	init_stage = INITSTAGE_EARLY
 	priority = FIRE_PRIORITY_STATPANEL
@@ -43,8 +43,7 @@ SUBSYSTEM_DEF(statpanels)
 	while(length(currentrun))
 		var/client/target = currentrun[length(currentrun)]
 		currentrun.len--
-
-		if(!target.stat_panel.is_ready())
+		if(!target.statbrowser_ready)
 			continue
 
 		if(target.stat_tab == "Status" && num_fires % status_wait == 0)
@@ -135,62 +134,71 @@ SUBSYSTEM_DEF(statpanels)
 		"interviews" = queued
 	)
 
-	// Push update
-	target.stat_panel.send_message("update_interviews", data)
-
-/datum/controller/subsystem/statpanels/proc/set_SDQL2_tab(client/target)
-	var/list/sdql2A = list()
-	sdql2A[++sdql2A.len] = list("", "Access Global SDQL2 List", REF(GLOB.sdql2_vv_statobj))
-	var/list/sdql2B = list()
-	for(var/datum/sdql2_query/query as anything in GLOB.sdql2_queries)
-		sdql2B = query.generate_stat()
-
-	sdql2A += sdql2B
-	target.stat_panel.send_message("update_sdql2", sdql2A)
-
-/datum/controller/subsystem/statpanels/proc/set_spells_tab(client/target, mob/target_mob)
-	var/list/proc_holders = target_mob.get_proc_holders()
-	target.spell_tabs.Cut()
-
-	for(var/proc_holder_list as anything in proc_holders)
-		target.spell_tabs |= proc_holder_list[1]
-
-	target.stat_panel.send_message("update_spells", list(spell_tabs = target.spell_tabs, proc_holders_encoded = proc_holders))
-
-/datum/controller/subsystem/statpanels/proc/set_turf_examine_tab(client/target, mob/target_mob)
-	var/list/overrides = list()
-	var/list/turfitems = list()
-	for(var/image/target_image as anything in target.images)
-		if(!target_image.loc || target_image.loc.loc != target_mob.listed_turf || !target_image.override)
-			continue
-		overrides += target_image.loc
-
-	turfitems[++turfitems.len] = list("[target_mob.listed_turf]", REF(target_mob.listed_turf), icon2html(target_mob.listed_turf, target, sourceonly=TRUE))
-
-	for(var/atom/movable/turf_content as anything in target_mob.listed_turf)
-		if(turf_content.mouse_opacity == MOUSE_OPACITY_TRANSPARENT)
-			continue
-		if(turf_content.invisibility > target_mob.see_invisible)
-			continue
-		if(turf_content in overrides)
-			continue
-		if(turf_content.IsObscured())
-			continue
-
-		if(length(turfitems) < 10) // only create images for the first 10 items on the turf, for performance reasons
-			var/turf_content_ref = REF(turf_content)
-			if(!(turf_content_ref in cached_images))
-				cached_images += turf_content_ref
-				turf_content.RegisterSignal(turf_content, COMSIG_PARENT_QDELETING, /atom/.proc/remove_from_cache) // we reset cache if anything in it gets deleted
-
-				if(ismob(turf_content) || length(turf_content.overlays) > 2)
-					turfitems[++turfitems.len] = list("[turf_content.name]", turf_content_ref, costly_icon2html(turf_content, target, sourceonly=TRUE))
-				else
-					turfitems[++turfitems.len] = list("[turf_content.name]", turf_content_ref, icon2html(turf_content, target, sourceonly=TRUE))
-			else
-				turfitems[++turfitems.len] = list("[turf_content.name]", turf_content_ref)
-		else
-			turfitems[++turfitems.len] = list("[turf_content.name]", REF(turf_content))
+				// Push update
+				target << output("[url_encode(json_encode(data))];", "statbrowser:update_interviews")
+			if(!length(GLOB.sdql2_queries) && ("SDQL2" in target.panel_tabs))
+				target << output("", "statbrowser:remove_sdql2")
+			else if(length(GLOB.sdql2_queries) && (target.stat_tab == "SDQL2" || !("SDQL2" in target.panel_tabs)))
+				var/list/sdql2A = list()
+				sdql2A[++sdql2A.len] = list("", "Access Global SDQL2 List", REF(GLOB.sdql2_vv_statobj))
+				var/list/sdql2B = list()
+				for(var/i in GLOB.sdql2_queries)
+					var/datum/sdql2_query/Q = i
+					sdql2B = Q.generate_stat()
+				sdql2A += sdql2B
+				target << output(url_encode(json_encode(sdql2A)), "statbrowser:update_sdql2")
+		if(target.mob)
+			var/mob/M = target.mob
+			if((target.stat_tab in target.spell_tabs) || !length(target.spell_tabs) && (length(M.mob_spell_list) || length(M.mind?.spell_list)))
+				var/list/proc_holders = M.get_proc_holders()
+				target.spell_tabs.Cut()
+				for(var/phl in proc_holders)
+					var/list/proc_holder_list = phl
+					target.spell_tabs |= proc_holder_list[1]
+				var/proc_holders_encoded = ""
+				if(length(proc_holders))
+					proc_holders_encoded = url_encode(json_encode(proc_holders))
+				target << output("[url_encode(json_encode(target.spell_tabs))];[proc_holders_encoded]", "statbrowser:update_spells")
+			if(M?.listed_turf)
+				var/mob/target_mob = M
+				if(!target_mob.TurfAdjacent(target_mob.listed_turf))
+					target << output("", "statbrowser:remove_listedturf")
+					target_mob.listed_turf = null
+				else if(target.stat_tab == M?.listed_turf.name || !(M?.listed_turf.name in target.panel_tabs))
+					var/list/overrides = list()
+					var/list/turfitems = list()
+					for(var/img in target.images)
+						var/image/target_image = img
+						if(!target_image.loc || target_image.loc.loc != target_mob.listed_turf || !target_image.override)
+							continue
+						overrides += target_image.loc
+					turfitems[++turfitems.len] = list("[target_mob.listed_turf]", REF(target_mob.listed_turf), icon2html(target_mob.listed_turf, target, sourceonly=TRUE))
+					for(var/tc in target_mob.listed_turf)
+						var/atom/movable/turf_content = tc
+						if(turf_content.mouse_opacity == MOUSE_OPACITY_TRANSPARENT)
+							continue
+						if(turf_content.invisibility > target_mob.see_invisible)
+							continue
+						if(turf_content in overrides)
+							continue
+						if(turf_content.IsObscured())
+							continue
+						if(length(turfitems) < 30) // only create images for the first 30 items on the turf, for performance reasons
+							if(!(REF(turf_content) in cached_images))
+								cached_images += REF(turf_content)
+								turf_content.RegisterSignal(turf_content, COMSIG_PARENT_QDELETING, /atom/.proc/remove_from_cache) // we reset cache if anything in it gets deleted
+								if(ismob(turf_content) || length(turf_content.overlays) > 2)
+									turfitems[++turfitems.len] = list("[turf_content.name]", REF(turf_content), costly_icon2html(turf_content, target, sourceonly=TRUE))
+								else
+									turfitems[++turfitems.len] = list("[turf_content.name]", REF(turf_content), icon2html(turf_content, target, sourceonly=TRUE))
+							else
+								turfitems[++turfitems.len] = list("[turf_content.name]", REF(turf_content))
+						else
+							turfitems[++turfitems.len] = list("[turf_content.name]", REF(turf_content))
+					turfitems = url_encode(json_encode(turfitems))
+					target << output("[turfitems];", "statbrowser:update_listedturf")
+		if(MC_TICK_CHECK)
+			return
 
 	turfitems = turfitems
 	target.stat_panel.send_message("update_listedturf", turfitems)

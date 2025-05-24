@@ -67,7 +67,7 @@ export const findCacheRoot = async () => {
 
 const onCacheRootFound = (cacheRoot) => {
   logger.log(`found cache at '${cacheRoot}'`);
-  // Plant a dummy browser window file, we'll be using this to avoid world topic. For byond 514.
+  // Plant dummy
   fs.closeSync(fs.openSync(cacheRoot + '/dummy', 'w'));
 };
 
@@ -94,27 +94,16 @@ export const reloadByondCache = async (bundleDir) => {
   );
   for (let cacheDir of cacheDirs) {
     // Clear garbage
-    const garbage = await resolveGlob(
-      cacheDir,
-      './*.+(bundle|chunk|hot-update).*',
-    );
-    try {
-      // Plant a dummy browser window file, we'll be using this to avoid world topic. For byond 515.
-      fs.closeSync(fs.openSync(cacheDir + '/dummy', 'w'));
-
-      for (let file of garbage) {
-        fs.unlinkSync(file);
-      }
-      // Copy assets
-      for (let asset of assets) {
-        const destination = resolvePath(cacheDir, basename(asset));
-        fs.writeFileSync(destination, fs.readFileSync(asset));
-      }
-      logger.log(`copied ${assets.length} files to '${cacheDir}'`);
-    } catch (err) {
-      logger.error(`failed copying to '${cacheDir}'`);
-      logger.error(err);
+    const garbage = await resolveGlob(cacheDir, './*.+(bundle|chunk|hot-update).*');
+    for (let file of garbage) {
+      await promisify(fs.unlink)(file);
     }
+    // Copy assets
+    for (let asset of assets) {
+      const destination = resolvePath(cacheDir, basename(asset));
+      await promisify(fs.copyFile)(asset, destination);
+    }
+    logger.log(`copied ${assets.length} files to '${cacheDir}'`);
   }
   // Notify dreamseeker
   const dss = await dssPromise;

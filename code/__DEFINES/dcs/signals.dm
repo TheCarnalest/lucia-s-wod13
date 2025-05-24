@@ -399,10 +399,7 @@
 #define COMSIG_MOB_APPLY_DAMGE	"mob_apply_damage"
 ///from base of /mob/throw_item(): (atom/target)
 #define COMSIG_MOB_THROW "mob_throw"
-///from base of /atom/movable/proc/throw_at(atom/target, range, speed, mob/thrower, spin = TRUE, diagonals_first = FALSE, datum/callback/callback, force = MOVE_FORCE_STRONG, gentle = FALSE, quickstart = TRUE)
-//SEND_SIGNAL(thrower, COMSIG_MOB_THREW_MOVABLE, target, TT)
-#define COMSIG_MOB_THREW_MOVABLE "mob_threw_movable"
-///from base of TYPE_VERB_REF(/mob, examinate)(): (atom/target)
+///from base of /mob/verb/examinate(): (atom/target)
 #define COMSIG_MOB_EXAMINATE "mob_examinate"
 ///from /mob/living/handle_eye_contact(): (mob/living/other_mob)
 #define COMSIG_MOB_EYECONTACT "mob_eyecontact"

@@ -66,7 +66,7 @@
 				bite_consumption = bite_consumption_mod ? 1 + round(max_volume / bite_consumption_mod) : bite_consumption,\
 				microwaved_type = microwaved_type,\
 				junkiness = junkiness,\
-				on_consume = CALLBACK(src, PROC_REF(OnConsume)))
+				on_consume = CALLBACK(src, .proc/OnConsume))
 
 
 /obj/item/food/grown/proc/make_dryable()
@@ -112,7 +112,7 @@
 
 /obj/item/food/grown/MakeLeaveTrash()
 	if(trash_type)
-		AddElement(/datum/element/food_trash, trash_type, FOOD_TRASH_OPENABLE, TYPE_PROC_REF(/obj/item/food/grown, generate_trash))
+		AddElement(/datum/element/food_trash, trash_type, FOOD_TRASH_OPENABLE, /obj/item/food/grown/.proc/generate_trash)
 	return
 
 // Various gene procs
